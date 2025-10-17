@@ -1,0 +1,178 @@
+
+# Global settings for Project Nebula
+global:
+  # serviceAccountName: project-nebula-sa
+  # Ingress settings
+  ingress:
+    enabled: true
+    className: "nginx"
+    hostname: project-nebula.com
+    annotations: {}
+      # nginx.ingress.io/rewrite-target: /
+    tls:
+      enabled: false
+      secretName: "" # Name of the secret with TLS certificate
+
+# Default resource settings
+resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Frontend Web Component
+frontend:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "project-nebula/frontend"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  probes:
+    liveness: 
+      httpGet:
+        path: /
+        port: http
+    readiness:
+      httpGet:
+        path: /
+        port: http
+
+# API Gateway Component
+apiGateway:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "project-nebula/api-gateway"
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  secrets:
+    # Leave empty to auto-generate, or provide existing secret name
+    existingSecret: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+
+# User Service Component
+userService:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "project-nebula/user-service"
+    tag: "latest"
+  service:
+    port: 8000
+  secrets:
+    dbSecretName: "postgresql-credentials"
+
+# Product Service Component
+productService:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "project-nebula/product-service"
+    tag: "latest"
+  service:
+    port: 8081
+  secrets:
+    dbSecretName: "postgresql-credentials"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+
+# Order Service Component
+orderService:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "project-nebula/order-service"
+    tag: "latest"
+  service:
+    port: 3000
+  persistence:
+    enabled: true
+    storageClass: "standard" 
+    size: 10Gi
+  secrets:
+    dbSecretName: "mongodb-credentials"
+    mqSecretName: "rabbitmq-credentials"
+
+# PostgreSQL Database
+postgresql:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "postgres"
+    tag: "13"
+  persistence:
+    storageClass: "standard"
+    size: 20Gi
+  secrets:
+    # Leave empty to auto-generate, or provide existing secret name
+    existingSecret: "" 
+
+# MongoDB Database
+mongodb:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "mongo"
+    tag: "4.4"
+  persistence:
+    storageClass: "standard"
+    size: 50Gi
+  secrets:
+    existingSecret: ""
+
+# RabbitMQ Message Queue
+rabbitmq:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "rabbitmq"
+    tag: "3-management"
+  persistence:
+    storageClass: "standard"
+    size: 5Gi
+
+# Redis Cache
+redis:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "redis"
+    tag: "6-alpine"
+  persistence:
+    storageClass: "standard"
+    size: 2Gi
+
+# Advanced Features
+resilience:
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+
+security:
+  rbac:
+    create: true
+  networkPolicy:
+    create: true
