@@ -1,0 +1,43 @@
+{{- if .Values.frontend.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-frontend
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        {{- include "project-nebula.labels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+    spec:
+      serviceAccountName: {{ include "project-nebula.serviceAccountName" . }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.frontend.probes.liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.frontend.probes.readiness | nindent 12 }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          env:
+            - name: API_GATEWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "project-nebula.fullname" . }}-frontend-config
+                  key: apiGatewayUrl
+{{- end }}
