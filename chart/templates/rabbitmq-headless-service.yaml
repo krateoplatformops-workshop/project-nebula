@@ -1,0 +1,21 @@
+{{- if .Values.rabbitmq.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-rabbitmq-headless
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 5672
+      name: amqp
+    - port: 15672
+      name: http-stats
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: rabbitmq
+{{- end }}
