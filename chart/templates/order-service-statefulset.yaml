@@ -1,0 +1,47 @@
+{{- if .Values.orderService.enabled -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-order-service
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: order-service
+spec:
+  replicas: {{ .Values.orderService.replicaCount }}
+  serviceName: {{ include "project-nebula.fullname" . }}-order-service
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: order-service
+  template:
+    metadata:
+      labels:
+        {{- include "project-nebula.labels" . | nindent 8 }}
+        app.kubernetes.io/component: order-service
+    spec:
+      serviceAccountName: {{ include "project-nebula.serviceAccountName" . }}
+      containers:
+        - name: order-service
+          image: "{{ .Values.orderService.image.repository }}:{{ .Values.orderService.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.orderService.service.port }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.orderService.secrets.dbSecretName }}
+            - secretRef:
+                name: {{ .Values.orderService.secrets.mqSecretName }}
+          volumeMounts:
+            - name: data
+              mountPath: /usr/src/app/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.orderService.persistence.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.orderService.persistence.size }}
+{{- end }}
