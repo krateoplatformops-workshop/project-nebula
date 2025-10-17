@@ -1,0 +1,25 @@
+{{- if and .Values.security.networkPolicy.create .Values.apiGateway.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-gateway-egress
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: api-gateway
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: user-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: product-service
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: order-service
+{{- end }}
