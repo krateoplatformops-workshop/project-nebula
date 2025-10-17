@@ -1,0 +1,8 @@
+apiVersion: core.krateo.io/v1alpha1
+kind: CompositionDefinition
+metadata:
+  name: project-nebula
+spec:
+  chart:
+    url: oci://ghcr.io/krateoplatformops-workshop/project-nebula/project-nebula
+    version: "0.1.0"
