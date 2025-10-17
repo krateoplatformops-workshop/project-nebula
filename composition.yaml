@@ -1,0 +1,10 @@
+apiVersion: composition.krateo.io/v0-1-0
+kind: ProjectNebula
+metadata:
+  name: project-nebula-example
+  namespace: default
+spec:
+  # Qui puoi sovrascrivere i valori di default del values.yaml
+  # Ad esempio:
+  # frontend:
+  #   replicaCount: 5
