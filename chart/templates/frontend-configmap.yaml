@@ -1,0 +1,10 @@
+{{- if .Values.frontend.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-frontend-config
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+data:
+  apiGatewayUrl: "http://{{ include "project-nebula.fullname" . }}-api-gateway:{{ .Values.apiGateway.service.port }}"
+{{- end }}
