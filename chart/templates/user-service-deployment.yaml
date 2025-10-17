@@ -1,0 +1,32 @@
+{{- if .Values.userService.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-user-service
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: user-service
+spec:
+  replicas: {{ .Values.userService.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: user-service
+  template:
+    metadata:
+      labels:
+        {{- include "project-nebula.labels" . | nindent 8 }}
+        app.kubernetes.io/component: user-service
+    spec:
+      serviceAccountName: {{ include "project-nebula.serviceAccountName" . }}
+      containers:
+        - name: user-service
+          image: "{{ .Values.userService.image.repository }}:{{ .Values.userService.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.userService.service.port }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.userService.secrets.dbSecretName }}
+{{- end }}
