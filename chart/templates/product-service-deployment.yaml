@@ -1,0 +1,32 @@
+{{- if .Values.productService.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-product-service
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: product-service
+spec:
+  replicas: {{ .Values.productService.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: product-service
+  template:
+    metadata:
+      labels:
+        {{- include "project-nebula.labels" . | nindent 8 }}
+        app.kubernetes.io/component: product-service
+    spec:
+      serviceAccountName: {{ include "project-nebula.serviceAccountName" . }}
+      containers:
+        - name: product-service
+          image: "{{ .Values.productService.image.repository }}:{{ .Values.productService.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.productService.service.port }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.productService.secrets.dbSecretName }}
+{{- end }}
