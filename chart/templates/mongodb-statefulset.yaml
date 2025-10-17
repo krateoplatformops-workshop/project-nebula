@@ -1,0 +1,51 @@
+{{- if .Values.mongodb.enabled -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-mongodb
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+spec:
+  serviceName: {{ include "project-nebula.fullname" . }}-mongodb-headless
+  replicas: {{ .Values.mongodb.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: mongodb
+  template:
+    metadata:
+      labels:
+        {{- include "project-nebula.labels" . | nindent 8 }}
+        app.kubernetes.io/component: mongodb
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - mongodb
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: mongodb
+          image: "{{ .Values.mongodb.image.repository }}:{{ .Values.mongodb.image.tag }}"
+          envFrom:
+            - secretRef:
+                name: {{ .Values.mongodb.secrets.existingSecret | default (printf "%s-mongodb" (include "project-nebula.fullname" .)) }}
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.mongodb.persistence.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.mongodb.persistence.size }}
+{{- end }}
