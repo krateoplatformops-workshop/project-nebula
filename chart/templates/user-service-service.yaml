@@ -1,0 +1,20 @@
+{{- if .Values.userService.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "project-nebula.fullname" . }}-user-service
+  labels:
+    {{- include "project-nebula.labels" . | nindent 4 }}
+    app.kubernetes.io/component: user-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.userService.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: user-service
+{{- end }}
